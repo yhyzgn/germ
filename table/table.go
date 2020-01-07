@@ -23,7 +23,18 @@ package table
 import "github.com/yhyzgn/germ/table/internal/primary"
 
 type Table interface {
-	Name() string
+	TableName() string
 
-	PrimaryStrategy(strategy primary.Strategy)
+	PrimaryStrategy() primary.Strategy
+}
+
+type Common struct {
+}
+
+func (Common) TableName() string {
+	return ""
+}
+
+func (Common) PrimaryStrategy() primary.Strategy {
+	return nil
 }

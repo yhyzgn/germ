@@ -37,10 +37,11 @@ type Field struct {
 	Name      string
 	Type      reflect.Type
 	ELmType   reflect.Type
+	Column    string
+	Ignored   bool
 	IsPrimary bool
 	SQLType   string
-	Size      int
-	IndexName string
+	Index     string
 	Nullable  bool
 	Default   interface{}
 	Comment   string

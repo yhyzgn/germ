@@ -14,26 +14,12 @@
 
 // author : 颜洪毅
 // e-mail : yhyzgn@gmail.com
-// time   : 2020-01-06 15:51
+// time   : 2020-01-07 11:28
 // version: 1.0.0
 // desc   : 
 
-package external
+package connector
 
-import "database/sql"
-
-type DB sql.DB
-
-const (
-	TagGerm = "germ"
-)
-
-const (
-	KeyColumn    = "column"
-	KeyIsPrimary = "primary"
-	KeySQLType   = "type"
-	KeyIndex     = "index"
-	KeyNullable  = "nullable"
-	KeyDefault   = "default"
-	KeyComment   = "comment"
+var (
+	Current *Connector
 )

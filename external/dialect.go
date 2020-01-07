@@ -20,8 +20,12 @@
 
 package external
 
+import "reflect"
+
 type Dialect interface {
 	Name() string
 
 	Quote(key string) string
+
+	TypeToSQLType(tp reflect.Type) string
 }

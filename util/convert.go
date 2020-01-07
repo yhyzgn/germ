@@ -14,14 +14,17 @@
 
 // author : 颜洪毅
 // e-mail : yhyzgn@gmail.com
-// time   : 2020-01-06 16:08
+// time   : 2020-01-07 12:25
 // version: 1.0.0
 // desc   : 
 
-package connector
+package util
 
-import "testing"
+import "reflect"
 
-func TestNew(t *testing.T) {
-	//conn := New()
+func StringToType(value string, tp reflect.Type) interface{} {
+	switch tp.Kind() {
+
+	}
+	return nil
 }

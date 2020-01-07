@@ -14,26 +14,36 @@
 
 // author : 颜洪毅
 // e-mail : yhyzgn@gmail.com
-// time   : 2020-01-06 15:51
+// time   : 2020-01-07 10:17
 // version: 1.0.0
 // desc   : 
 
-package external
+package logger
 
-import "database/sql"
+import "log"
 
-type DB sql.DB
+type Logger interface {
+	Info(info interface{})
+	InfoF(format string, args ...interface{})
+	Error(err interface{})
+	ErrorF(format string, args ...interface{})
+}
 
-const (
-	TagGerm = "germ"
-)
+type common struct {
+}
 
-const (
-	KeyColumn    = "column"
-	KeyIsPrimary = "primary"
-	KeySQLType   = "type"
-	KeyIndex     = "index"
-	KeyNullable  = "nullable"
-	KeyDefault   = "default"
-	KeyComment   = "comment"
-)
+func (common) Info(info interface{}) {
+	log.Println(info)
+}
+
+func (common) InfoF(format string, args ...interface{}) {
+	log.Printf(format, args...)
+}
+
+func (common) Error(err interface{}) {
+	log.Println(err)
+}
+
+func (common) ErrorF(format string, args ...interface{}) {
+	log.Printf(format, args...)
+}

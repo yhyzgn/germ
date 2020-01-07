@@ -20,7 +20,10 @@
 
 package dialect
 
-import "fmt"
+import (
+	"fmt"
+	"reflect"
+)
 
 type Common struct {
 }
@@ -31,4 +34,41 @@ func (*Common) Name() string {
 
 func (*Common) Quote(key string) string {
 	return fmt.Sprintf(`"%s"`, key)
+}
+
+func (*Common) TypeToSQLType(tp reflect.Type) string {
+	switch tp.Kind() {
+	case reflect.Int8, reflect.Uint8:
+		// 1 字节/8 位bit
+		// 默认长度为：6
+		return "TINYINT"
+	case reflect.Int16, reflect.Uint16:
+		// 2 字节/16 位bit
+		// 默认长度为：9
+		return "SMALLINT"
+	case reflect.Int, reflect.Uint, reflect.Int32, reflect.Uint32:
+		// 2 字节/16 位bit
+		// 默认长度为：11
+		return "INT"
+	case reflect.Int64, reflect.Uint64:
+		// 8 字节/64 位bit
+		// 默认长度为：20
+		return "BIGINT"
+	case reflect.String:
+		return "VARCHAR(255)"
+	case reflect.Bool:
+		// 0 -> false
+		// 1 -> true
+		return "TINYINT(1)"
+	case reflect.Float32:
+		return "FLOAT"
+	case reflect.Float64:
+		return "DOUBLE"
+	case reflect.Struct:
+		switch tp.String() {
+		case "time.Time":
+			return "DATETIME"
+		}
+	}
+	return ""
 }

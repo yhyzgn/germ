@@ -34,10 +34,10 @@ type Connector struct {
 	DB      *external.DB
 }
 
-func Connect(dialect external.Dialect, source *external.DataSource) (*Connector, error) {
+func Connect(dlt external.Dialect, src *external.DataSource) (*Connector, error) {
 	cn := &Connector{
-		dialect: dialect,
-		source:  source,
+		dialect: dlt,
+		source:  src,
 	}
 	db, err := sql.Open(cn.dialect.Name(), cn.url())
 	if err != nil {
@@ -53,6 +53,10 @@ func Connect(dialect external.Dialect, source *external.DataSource) (*Connector,
 	db.SetMaxIdleConns(cn.source.MaxIdle)
 	temp := external.DB(*db)
 	cn.DB = &temp
+
+	// 当前方言
+	Current = cn
+
 	return cn, nil
 }
 
@@ -66,6 +70,10 @@ func (cn *Connector) Close() error {
 func (cn *Connector) R() *sql.DB {
 	temp := sql.DB(*cn.DB)
 	return &temp
+}
+
+func (cn *Connector) Dialect() external.Dialect {
+	return cn.dialect
 }
 
 func (cn *Connector) url() string {
