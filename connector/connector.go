@@ -31,7 +31,7 @@ import (
 type Connector struct {
 	dialect external.Dialect
 	source  *external.DataSource
-	DB      *external.DB
+	DB      *sql.DB
 }
 
 func Connect(dlt external.Dialect, src *external.DataSource) (*Connector, error) {
@@ -51,8 +51,7 @@ func Connect(dlt external.Dialect, src *external.DataSource) (*Connector, error)
 	}
 	db.SetMaxOpenConns(cn.source.MaxOpen)
 	db.SetMaxIdleConns(cn.source.MaxIdle)
-	temp := external.DB(*db)
-	cn.DB = &temp
+	cn.DB = db
 
 	// 当前方言
 	Current = cn
@@ -60,22 +59,34 @@ func Connect(dlt external.Dialect, src *external.DataSource) (*Connector, error)
 	return cn, nil
 }
 
+func (cn *Connector) Ping() error {
+	return cn.DB.Ping()
+}
+
 func (cn *Connector) Close() error {
 	if cn.DB == nil {
 		return errors.New("Can not close a closed connection.")
 	}
-	return cn.R().Close()
-}
-
-func (cn *Connector) R() *sql.DB {
-	temp := sql.DB(*cn.DB)
-	return &temp
+	return cn.DB.Close()
 }
 
 func (cn *Connector) Dialect() external.Dialect {
 	return cn.dialect
 }
 
+func (cn *Connector) DataSource() *external.DataSource {
+	return cn.source
+}
+
+func (cn *Connector) Query(sql string, args ...interface{}) (*sql.Rows, error) {
+	//logger.SQL(sql, args...)
+	return cn.DB.Query(sql, args...)
+}
+
+func (cn *Connector) Exec(sql string, args ...interface{}) (sql.Result, error) {
+	return cn.DB.Exec(sql, args...)
+}
+
 func (cn *Connector) url() string {
-	return fmt.Sprintf("%v:%v@tcp(%v:%v)/%v%v", cn.source.Username, cn.source.Password, cn.source.Host, cn.source.Port, cn.source.DBName, util.JoinMapParams(cn.source.Params))
+	return fmt.Sprintf("%v:%v@tcp(%v:%v)/%v?%v", cn.source.Username, cn.source.Password, cn.source.Host, cn.source.Port, cn.source.DBName, util.JoinMapParams(cn.source.Params))
 }

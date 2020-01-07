@@ -20,20 +20,16 @@
 
 package external
 
-import "database/sql"
-
-type DB sql.DB
-
 const (
 	TagGerm = "germ"
 )
 
 const (
-	KeyColumn    = "column"
-	KeyIsPrimary = "primary"
-	KeySQLType   = "type"
-	KeyIndex     = "index"
-	KeyNullable  = "nullable"
-	KeyDefault   = "default"
-	KeyComment   = "comment"
+	KeyColumn  = "column"
+	KeyPrimary = "primary"
+	KeySQLType = "type"
+	KeyIndex   = "index"
+	KeyNotNull = "notnull"
+	KeyDefault = "default"
+	KeyComment = "comment"
 )

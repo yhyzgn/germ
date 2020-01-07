@@ -24,25 +24,43 @@ import (
 	"github.com/yhyzgn/germ/connector"
 	"github.com/yhyzgn/germ/dialect/mysql"
 	"github.com/yhyzgn/germ/external"
+	"github.com/yhyzgn/germ/external/table/primary"
+	"github.com/yhyzgn/germ/external/table/primary/strategy"
 	"github.com/yhyzgn/germ/logger"
 	"testing"
 	"time"
 )
 
 type Test struct {
-	ID         int64     `germ:"column:id;primary;"`
-	Name       string    `germ:"column:name;default:null"`
+	ID         int64     `germ:"column:id;primary;comment:主键ID"`
+	Name       string    `germ:"column:name;default:null;comment:姓名"`
 	Age        int       `germ:"type:int;"`
-	CreateTime time.Time `germ:"column:create_time"`
-	Common
+	CreateTime time.Time `germ:"column:create_time;notnull;"`
+	external.Common
 }
 
 func (Test) TableName() string {
 	return "test"
 }
 
+func (Test) PrimaryStrategy() primary.Strategy {
+	return &strategy.AutoIncrement{}
+}
+
+type User struct {
+	ID         int64     `germ:"column:id;primary;"`
+	Name       string    `germ:"column:name;default:null"`
+	Age        int       `germ:"type:int;"`
+	CreateTime time.Time `germ:"column:create_time;notnull;"`
+	external.Common
+}
+
+func (User) TableName() string {
+	return "user"
+}
+
 func TestRegister(t *testing.T) {
-	conn, err := connector.Connect(&mysql.Dialect{}, &external.DataSource{
+	_, err := connector.Connect(&mysql.Dialect{}, &external.DataSource{
 		Host:     "localhost",
 		Port:     3306,
 		Username: "root",
@@ -52,17 +70,20 @@ func TestRegister(t *testing.T) {
 		MaxIdle:  10,
 		Params: map[string]interface{}{
 			"charset": "utf8",
-			"useSSL":  false,
 		},
 	})
 	if err != nil {
 		logger.Fatal(err)
 		return
 	}
-	logger.Info(conn)
 
-	test := &Test{}
-	err = Register(test)
+	err = Register(&Test{})
+	if err != nil {
+		logger.Fatal(err)
+		return
+	}
+
+	err = Register(&User{})
 	if err != nil {
 		logger.Fatal(err)
 		return

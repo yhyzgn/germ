@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"github.com/yhyzgn/germ/connector"
 	"github.com/yhyzgn/germ/external"
+	"github.com/yhyzgn/germ/external/table"
 	"github.com/yhyzgn/germ/util"
 	"reflect"
 	"strings"
@@ -33,27 +34,31 @@ import (
 
 var (
 	once            sync.Once
-	cacheTableName  map[string]Info   // 表名：类信息
-	cacheStructName map[string]string // 类名：表名
+	cacheTableName  map[string]table.Info // 表名：类信息
+	cacheStructName map[string]string     // 类名：表名
+	dialect         external.Dialect
+	source          *external.DataSource
 )
 
 func init() {
 	once.Do(func() {
-		cacheTableName = make(map[string]Info)
+		cacheTableName = make(map[string]table.Info)
 		cacheStructName = make(map[string]string)
 	})
 }
 
-func Register(tl Table) (err error) {
+func Register(tl external.Table) (err error) {
 	if tl == nil {
 		err = errors.New("The table can not be nil pointer reference.")
 		return
 	}
 
 	if connector.Current == nil {
-		err = errors.New("Must connect to sql driver at first.")
+		err = errors.New("Must connect to sql connector at first.")
 		return
 	}
+	dialect = connector.Current.Dialect()
+	source = connector.Current.DataSource()
 
 	hasPrimary := false
 
@@ -71,29 +76,27 @@ func Register(tl Table) (err error) {
 	}
 
 	// 字段们
-	fields := make([]Field, 0)
+	fields := make([]table.Field, 0)
 
 	count := elmTp.NumField()
 	var (
 		fld   reflect.StructField
-		field Field
+		field table.Field
 		tags  map[string]string
 	)
 	for i := 0; i < count; i++ {
 		fld = elmTp.Field(i)
 
-		// 字段信息
-		field = Field{
-			Name:    fld.Name,
-			Type:    fld.Type,
-			ELmType: util.GetEleType(fld.Type),
-		}
-
 		// 标签信息
 		tags = util.GetTagMap(external.TagGerm, fld.Tag)
-		if tags == nil {
-			field.Ignored = true
-		} else {
+		if tags != nil {
+			// 字段信息
+			field = table.Field{
+				Name:    fld.Name,
+				Type:    fld.Type,
+				ELmType: util.GetEleType(fld.Type),
+			}
+
 			// 列名
 			column, ok := tags[external.KeyColumn]
 			if !ok || column == "" {
@@ -102,14 +105,14 @@ func Register(tl Table) (err error) {
 			field.Column = column
 
 			// 是否是主键
-			_, isPrimary := tags[external.KeyIsPrimary]
+			_, isPrimary := tags[external.KeyPrimary]
 			if isPrimary {
 				if hasPrimary {
 					err = fmt.Errorf("Only allow one primary key in one table [%v].", fld.Name)
 					return
 				}
 				field.IsPrimary = true
-				field.Nullable = false
+				field.NotNull = true
 				hasPrimary = true
 			}
 
@@ -133,26 +136,26 @@ func Register(tl Table) (err error) {
 				field.Index = index
 			}
 
-			// 是否可空
-			_, nullable := tags[external.KeyNullable]
-			// 主键不能为空
-			if nullable && field.IsPrimary {
-				err = fmt.Errorf("The primary key field [%v] can not be null in struct [%v].", fld.Name, elmTp.String())
-				return
+			// 是否不可空
+			if !field.IsPrimary {
+				_, notnull := tags[external.KeyNotNull]
+				field.NotNull = notnull
 			}
-			field.Nullable = nullable
 
 			// 默认值
 			dft, ok := tags[external.KeyDefault]
 			if ok {
-				// 自动设置是否可空
 				if strings.ToUpper(dft) == "NULL" {
 					// 主键不能为空
 					if field.IsPrimary {
-						err = fmt.Errorf("The primary key field [%v] can not be null in struct [%v].", fld.Name, elmTp.String())
+						err = fmt.Errorf("The primary key field [%v] can not be null in struct [%v], but set default value is null.", fld.Name, elmTp.String())
 						return
 					}
-					field.Nullable = true
+					// 冲突
+					if field.NotNull {
+						err = fmt.Errorf("The field [%v] can not be null in struct [%v], but set default value is null.", fld.Name, elmTp.String())
+						return
+					}
 				}
 				field.Default = dft
 			}
@@ -162,21 +165,24 @@ func Register(tl Table) (err error) {
 			if ok {
 				field.Comment = comment
 			}
-
 			fields = append(fields, field)
 		}
-
-		// 表名：类信息
-		cacheTableName[tableName] = Info{
-			Name: tableName,
-			Struct: Struct{
-				Type:    tp,
-				ELmType: elmTp,
-				Fields:  fields,
-			},
-		}
-		// 类名 : 表名
-		cacheStructName[elmTp.String()] = tableName
 	}
+
+	// 表名：类信息
+	cacheTableName[tableName] = table.Info{
+		Name: tableName,
+		Struct: table.Struct{
+			Type:    tp,
+			ELmType: elmTp,
+			Fields:  fields,
+		},
+		Strategy: tl.PrimaryStrategy(),
+	}
+	// 类名 : 表名
+	cacheStructName[elmTp.String()] = tableName
+
+	// 检查数据库表信息
+	CheckTable(tableName)
 	return
 }

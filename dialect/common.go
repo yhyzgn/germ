@@ -22,21 +22,27 @@ package dialect
 
 import (
 	"fmt"
+	"github.com/yhyzgn/germ/external"
 	"reflect"
 )
 
-type Common struct {
+// Adapter 数据库方言适配器
+//
+// 默认为 MySQL 驱动
+//
+// 其他方言则通过继承该适配器并重写方法实现
+type Adapter struct {
 }
 
-func (*Common) Name() string {
-	return ""
+func (*Adapter) Name() string {
+	return "mysql"
 }
 
-func (*Common) Quote(key string) string {
-	return fmt.Sprintf(`"%s"`, key)
+func (*Adapter) Quote(key string) string {
+	return fmt.Sprintf("`%s`", key)
 }
 
-func (*Common) TypeToSQLType(tp reflect.Type) string {
+func (*Adapter) TypeToSQLType(tp reflect.Type) string {
 	switch tp.Kind() {
 	case reflect.Int8, reflect.Uint8:
 		// 1 字节/8 位bit
@@ -71,4 +77,30 @@ func (*Common) TypeToSQLType(tp reflect.Type) string {
 		}
 	}
 	return ""
+}
+
+func (*Adapter) TableExistSQL(dbName, tableName string) *external.SQLCommand {
+	return external.
+		NewCommand("SELECT").
+		LineTab("*", 1).
+		Line("FROM").
+		LineTab("information_schema.TABLES", 1).
+		Line("WHERE").
+		LineTab("TABLE_SCHEMA = ? AND", 1).
+		LineTab("TABLE_NAME = ?", 1).
+		Arguments(dbName, tableName)
+}
+
+func (*Adapter) ColumnsOfTableSQL(dbName, tableName string) *external.SQLCommand {
+	return external.
+		NewCommand("SELECT").
+		LineTab("*", 1).
+		Line("FROM").
+		LineTab("information_schema.COLUMNS", 1).
+		Line("WHERE").
+		LineTab("TABLE_SCHEMA = ? AND", 1).
+		LineTab("TABLE_NAME = ?", 1).
+		Line("ORDER BY").
+		LineTab("ORDINAL_POSITION ASC", 1).
+		Arguments(dbName, tableName)
 }

@@ -14,27 +14,8 @@
 
 // author : 颜洪毅
 // e-mail : yhyzgn@gmail.com
-// time   : 2020-01-06 16:48
+// time   : 2020-01-07 16:03
 // version: 1.0.0
 // desc   : 
 
-package table
-
-import "github.com/yhyzgn/germ/table/internal/primary"
-
-type Table interface {
-	TableName() string
-
-	PrimaryStrategy() primary.Strategy
-}
-
-type Common struct {
-}
-
-func (Common) TableName() string {
-	return ""
-}
-
-func (Common) PrimaryStrategy() primary.Strategy {
-	return nil
-}
+package connector

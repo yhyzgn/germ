@@ -22,6 +22,7 @@ package logger
 
 import (
 	"os"
+	"strings"
 	"sync"
 )
 
@@ -40,9 +41,9 @@ func init() {
 	})
 }
 
-func SQL(sql string) {
+func SQL(sql string, args ...interface{}) {
 	if showSQL {
-		lgr.Info(sql)
+		lgr.InfoF("\n"+strings.ReplaceAll(sql, "?", "%v"), args...)
 	}
 }
 

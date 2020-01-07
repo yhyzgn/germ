@@ -14,17 +14,39 @@
 
 // author : 颜洪毅
 // e-mail : yhyzgn@gmail.com
-// time   : 2020-01-06 16:09
+// time   : 2020-01-06 17:01
 // version: 1.0.0
 // desc   : 
 
-package mysql
+package table
 
 import (
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/yhyzgn/germ/dialect"
+	"github.com/yhyzgn/germ/external/table/primary"
+	"reflect"
 )
 
-type Dialect struct {
-	dialect.Adapter
+type Info struct {
+	Name     string
+	Struct   Struct
+	Strategy primary.Strategy
+}
+
+type Struct struct {
+	Type    reflect.Type
+	ELmType reflect.Type
+	Fields  []Field
+}
+
+type Field struct {
+	Name       string
+	Type       reflect.Type
+	ELmType    reflect.Type
+	Column     string
+	IsPrimary  bool
+	PrimaryKey string
+	SQLType    string
+	Index      string
+	NotNull    bool
+	Default    interface{}
+	Comment    string
 }

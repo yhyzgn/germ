@@ -14,17 +14,41 @@
 
 // author : 颜洪毅
 // e-mail : yhyzgn@gmail.com
-// time   : 2020-01-06 16:09
+// time   : 2020-01-07 16:15
 // version: 1.0.0
 // desc   : 
 
-package mysql
+package table
 
 import (
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/yhyzgn/germ/dialect"
+	"github.com/yhyzgn/germ/connector"
+	"github.com/yhyzgn/germ/logger"
 )
 
-type Dialect struct {
-	dialect.Adapter
+func CheckTable(tableName string) {
+	existCMD := Exist(tableName)
+
+	rows, err := connector.Current.Query(existCMD.SQL, existCMD.Args...)
+	if err != nil {
+		logger.Error(err)
+		return
+	}
+	defer rows.Close()
+	// 表是否存在
+	exist := rows.Next()
+
+	if exist {
+		// 已存在，检查结构是否同步
+	} else {
+		// 不存在，生成表
+		create := Create(tableName)
+		logger.SQL(create.SQL)
+
+		res, err := connector.Current.Exec(create.SQL)
+		if err != nil {
+			logger.Error(err)
+			return
+		}
+		logger.Info(res)
+	}
 }

@@ -14,22 +14,49 @@
 
 // author : 颜洪毅
 // e-mail : yhyzgn@gmail.com
-// time   : 2020-01-06 15:44
+// time   : 2020-01-07 14:45
 // version: 1.0.0
 // desc   : 
 
 package external
 
-import "reflect"
+type SQLCommand struct {
+	SQL  string
+	Args []interface{}
+}
 
-type Dialect interface {
-	Name() string
+func NewCommand(sql string) *SQLCommand {
+	return &SQLCommand{
+		SQL: sql,
+	}
+}
 
-	Quote(key string) string
+func (s *SQLCommand) Line(sql string) *SQLCommand {
+	return s.LineTab(sql, 0)
+}
 
-	TypeToSQLType(tp reflect.Type) string
+func (s *SQLCommand) Append(sql string) *SQLCommand {
+	s.SQL += " " + sql
+	return s
+}
 
-	TableExistSQL(dbName, tableName string) *SQLCommand
+func (s *SQLCommand) Link(sql string) *SQLCommand {
+	s.SQL += sql
+	return s
+}
 
-	ColumnsOfTableSQL(dbName, tableName string) *SQLCommand
+func (s *SQLCommand) LineTab(sql string, tab int) *SQLCommand {
+	if s.SQL != "" {
+		s.SQL += "\n"
+	}
+	for i := 0; i < tab; i++ {
+		sql = "\t" + sql
+	}
+	s.SQL += sql
+	return s
+}
+
+func (s *SQLCommand) Arguments(args ...interface{}) *SQLCommand {
+	s.Args = args
+	return s
 }
