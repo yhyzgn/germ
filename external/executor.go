@@ -14,39 +14,18 @@
 
 // author : 颜洪毅
 // e-mail : yhyzgn@gmail.com
-// time   : 2020-01-06 17:01
+// time   : 2020-01-09 14:55
 // version: 1.0.0
 // desc   : 
 
-package table
+package external
 
-import (
-	"github.com/yhyzgn/germ/external/table/primary"
-	"reflect"
-)
+import "database/sql"
 
-type Info struct {
-	Name     string
-	Struct   Struct
-	Strategy primary.Strategy
-}
+type Executor interface {
+	Exec(sql string, args ...interface{}) (sql.Result, error)
 
-type Struct struct {
-	Type    reflect.Type
-	ELmType reflect.Type
-	Fields  []Field
-}
+	Query(query string, args ...interface{}) (*sql.Rows, error)
 
-type Field struct {
-	Name       string
-	Type       reflect.Type
-	ELmType    reflect.Type
-	Column     string
-	IsPrimary  bool
-	PrimaryKey string
-	SQLType    string
-	Index      string
-	NotNull    bool
-	Default    interface{}
-	Comment    string
+	QueryRow(query string, args ...interface{}) *sql.Row
 }

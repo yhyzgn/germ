@@ -20,16 +20,29 @@
 
 package external
 
+// 索引类型
+type IndexType int
+
 const (
 	TagGerm = "germ"
 )
 
 const (
-	KeyColumn  = "column"
-	KeyPrimary = "primary"
-	KeySQLType = "type"
-	KeyIndex   = "index"
-	KeyNotNull = "notnull"
-	KeyDefault = "default"
-	KeyComment = "comment"
+	KeyColumn   = "column"
+	KeyPrimary  = "primary"
+	KeySQLType  = "type"
+	KeyIndex    = "index"
+	KeyUnique   = "unique"
+	KeyFullText = "fulltext"
+	KeySpatial  = "spatial"
+	KeyNotNull  = "notnull"
+	KeyDefault  = "default"
+	KeyComment  = "comment"
+)
+
+const (
+	IndexNormal IndexType = iota
+	IndexUnique
+	IndexFullText
+	IndexSpatial
 )

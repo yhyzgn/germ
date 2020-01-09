@@ -14,34 +14,45 @@
 
 // author : 颜洪毅
 // e-mail : yhyzgn@gmail.com
-// time   : 2020-01-07 16:11
+// time   : 2020-01-06 17:01
 // version: 1.0.0
 // desc   : 
 
-package table
+package external
 
 import (
-	"github.com/yhyzgn/germ/external"
-	"github.com/yhyzgn/germ/logger"
+	"github.com/yhyzgn/germ/external/table/primary"
+	"reflect"
 )
 
-func HasTable(tableName string) *external.SQLCommand {
-	return dialect.HasTable(tableName)
+type Model struct {
+	TableName string
+	Struct    Struct
+	Strategy  primary.Strategy
+	Fields    []*Field
 }
 
-func Columns(tableName string) *external.SQLCommand {
-	return dialect.TableColumns(tableName)
+type Struct struct {
+	Type    reflect.Type
+	ELmType reflect.Type
 }
 
-func Create(tableName string) []*external.SQLCommand {
-	model, ok := cacheTableName[tableName]
-	if !ok {
-		logger.ErrorF("The table [%v] has not been registered.")
-		return nil
-	}
-	if model.Fields == nil || len(model.Fields) == 0 {
-		return nil
-	}
+type Field struct {
+	Name       string
+	Type       reflect.Type
+	ELmType    reflect.Type
+	Column     string
+	IsPrimary  bool
+	PrimaryKey string
+	SQLType    string
+	NotNull    bool
+	Default    interface{}
+	Comment    string
+	Indexes    []*Index
+}
 
-	return dialect.CreateTable(model, dialect)
+type Index struct {
+	Name   string
+	Column string
+	Type   IndexType
 }

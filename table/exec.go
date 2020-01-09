@@ -21,34 +21,40 @@
 package table
 
 import (
+	"fmt"
 	"github.com/yhyzgn/germ/connector"
 	"github.com/yhyzgn/germ/logger"
 )
 
 func CheckTable(tableName string) {
-	existCMD := Exist(tableName)
+	hasCMD := HasTable(tableName)
 
-	rows, err := connector.Current.Query(existCMD.SQL, existCMD.Args...)
+	rows, err := connector.Current.Query(hasCMD.SQL, hasCMD.Args...)
 	if err != nil {
 		logger.Error(err)
 		return
 	}
 	defer rows.Close()
+
 	// 表是否存在
-	exist := rows.Next()
-
-	if exist {
-		// 已存在，检查结构是否同步
-	} else {
-		// 不存在，生成表
-		create := Create(tableName)
-		logger.SQL(create.SQL)
-
-		res, err := connector.Current.Exec(create.SQL)
-		if err != nil {
-			logger.Error(err)
-			return
+	if exist := rows.Next(); exist {
+		var count int
+		err = rows.Scan(&count)
+		if err == nil && count == 1 {
+			// 已存在，检查结构是否同步
+			logger.Info(tableName + "表已存在")
+		} else {
+			// 不存在，生成表
+			create := Create(tableName)
+			fmt.Println(create[0].SQL)
+			//logger.SQL(create.SQL)
+			//
+			//res, err := connector.Current.Exec(create.SQL)
+			//if err != nil {
+			//	logger.Error(err)
+			//	return
+			//}
+			//logger.Info(res)
 		}
-		logger.Info(res)
 	}
 }

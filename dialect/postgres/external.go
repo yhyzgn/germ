@@ -14,34 +14,23 @@
 
 // author : 颜洪毅
 // e-mail : yhyzgn@gmail.com
-// time   : 2020-01-07 16:11
+// time   : 2020-01-09 18:22
 // version: 1.0.0
 // desc   : 
 
-package table
+package postgres
 
-import (
-	"github.com/yhyzgn/germ/external"
-	"github.com/yhyzgn/germ/logger"
-)
+import "github.com/yhyzgn/germ/errors"
 
-func HasTable(tableName string) *external.SQLCommand {
-	return dialect.HasTable(tableName)
+type rawResult struct {
+	ID  int64
+	Err error
 }
 
-func Columns(tableName string) *external.SQLCommand {
-	return dialect.TableColumns(tableName)
+func (t rawResult) LastInsertId() (int64, error) {
+	return t.ID, t.Err
 }
 
-func Create(tableName string) []*external.SQLCommand {
-	model, ok := cacheTableName[tableName]
-	if !ok {
-		logger.ErrorF("The table [%v] has not been registered.")
-		return nil
-	}
-	if model.Fields == nil || len(model.Fields) == 0 {
-		return nil
-	}
-
-	return dialect.CreateTable(model, dialect)
+func (t rawResult) RowsAffected() (int64, error) {
+	return 0, errors.NewAffectedError(t.Err.Error())
 }

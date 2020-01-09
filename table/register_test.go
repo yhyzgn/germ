@@ -33,8 +33,8 @@ import (
 
 type Test struct {
 	ID         int64     `germ:"column:id;primary;comment:主键ID"`
-	Name       string    `germ:"column:name;default:null;comment:姓名"`
-	Age        int       `germ:"type:int;"`
+	Name       string    `germ:"column:name;default:null;index:user_name;comment:姓名"`
+	Age        int       `germ:"type:int;unique:user_age;"`
 	CreateTime time.Time `germ:"column:create_time;notnull;"`
 	external.TableAdapter
 }

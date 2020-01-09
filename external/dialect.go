@@ -20,7 +20,10 @@
 
 package external
 
-import "reflect"
+import (
+	"database/sql"
+	"reflect"
+)
 
 type Dialect interface {
 	Name() string
@@ -29,7 +32,20 @@ type Dialect interface {
 
 	TypeToSQLType(tp reflect.Type) string
 
-	TableExistSQL(dbName, tableName string) *SQLCommand
+	// 有些数据库不支持返回最后插入id，如：postgres，此时需要手动查询
+	Insert(executor Executor, command *SQLCommand) (sql.Result, error)
 
-	ColumnsOfTableSQL(dbName, tableName string) *SQLCommand
+	// 有些数据库根据 RowsAffected 来判断是否更新成功，
+	// 而有些不能，如：MySQL，只要数据无变化，RowsAffected就是0，此时只能通过SQL语句执行是否成功来判断
+	Update(executor Executor, command *SQLCommand) (sql.Result, error)
+
+	HasTable(tableName string) *SQLCommand
+
+	TableColumns(tableName string) *SQLCommand
+
+	CreateTable(model *Model, dialect Dialect) []*SQLCommand
+
+	ModifyTable(model *Model, dialect Dialect) []*SQLCommand
+
+	DropTable(model *Model, dialect Dialect) *SQLCommand
 }

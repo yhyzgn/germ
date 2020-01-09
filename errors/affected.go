@@ -14,34 +14,20 @@
 
 // author : 颜洪毅
 // e-mail : yhyzgn@gmail.com
-// time   : 2020-01-07 16:11
+// time   : 2020-01-09 18:04
 // version: 1.0.0
 // desc   : 
 
-package table
+package errors
 
-import (
-	"github.com/yhyzgn/germ/external"
-	"github.com/yhyzgn/germ/logger"
-)
-
-func HasTable(tableName string) *external.SQLCommand {
-	return dialect.HasTable(tableName)
+type AffectedError struct {
+	err string
 }
 
-func Columns(tableName string) *external.SQLCommand {
-	return dialect.TableColumns(tableName)
+func NewAffectedError(err string) AffectedError {
+	return AffectedError{err: err}
 }
 
-func Create(tableName string) []*external.SQLCommand {
-	model, ok := cacheTableName[tableName]
-	if !ok {
-		logger.ErrorF("The table [%v] has not been registered.")
-		return nil
-	}
-	if model.Fields == nil || len(model.Fields) == 0 {
-		return nil
-	}
-
-	return dialect.CreateTable(model, dialect)
+func (e AffectedError) Error() string {
+	return "Affected error : " + e.err
 }

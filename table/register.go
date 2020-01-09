@@ -25,7 +25,6 @@ import (
 	"fmt"
 	"github.com/yhyzgn/germ/connector"
 	"github.com/yhyzgn/germ/external"
-	"github.com/yhyzgn/germ/external/table"
 	"github.com/yhyzgn/germ/util"
 	"reflect"
 	"strings"
@@ -34,15 +33,15 @@ import (
 
 var (
 	once            sync.Once
-	cacheTableName  map[string]table.Info // 表名：类信息
-	cacheStructName map[string]string     // 类名：表名
+	cacheTableName  map[string]*external.Model // 表名：类信息
+	cacheStructName map[string]string          // 类名：表名
 	dialect         external.Dialect
 	source          *external.DataSource
 )
 
 func init() {
 	once.Do(func() {
-		cacheTableName = make(map[string]table.Info)
+		cacheTableName = make(map[string]*external.Model)
 		cacheStructName = make(map[string]string)
 	})
 }
@@ -76,12 +75,12 @@ func Register(tl external.Table) (err error) {
 	}
 
 	// 字段们
-	fields := make([]table.Field, 0)
+	fields := make([]*external.Field, 0)
 
 	count := elmTp.NumField()
 	var (
 		fld   reflect.StructField
-		field table.Field
+		field *external.Field
 		tags  map[string]string
 	)
 	for i := 0; i < count; i++ {
@@ -91,10 +90,11 @@ func Register(tl external.Table) (err error) {
 		tags = util.GetTagMap(external.TagGerm, fld.Tag)
 		if tags != nil {
 			// 字段信息
-			field = table.Field{
+			field = &external.Field{
 				Name:    fld.Name,
 				Type:    fld.Type,
 				ELmType: util.GetEleType(fld.Type),
+				Indexes: make([]*external.Index, 0),
 			}
 
 			// 列名
@@ -130,12 +130,6 @@ func Register(tl external.Table) (err error) {
 				field.SQLType = sqlType
 			}
 
-			// 索引
-			index, ok := tags[external.KeyIndex]
-			if ok {
-				field.Index = index
-			}
-
 			// 是否不可空
 			if !field.IsPrimary {
 				_, notnull := tags[external.KeyNotNull]
@@ -165,19 +159,32 @@ func Register(tl external.Table) (err error) {
 			if ok {
 				field.Comment = comment
 			}
+
+			// 普通索引
+			index(field, tags, external.KeyIndex)
+
+			// 唯一索引
+			index(field, tags, external.KeyUnique)
+
+			// 全文索引
+			index(field, tags, external.KeyFullText)
+
+			// 空间索引
+			index(field, tags, external.KeySpatial)
+
 			fields = append(fields, field)
 		}
 	}
 
 	// 表名：类信息
-	cacheTableName[tableName] = table.Info{
-		Name: tableName,
-		Struct: table.Struct{
+	cacheTableName[tableName] = &external.Model{
+		TableName: tableName,
+		Struct: external.Struct{
 			Type:    tp,
 			ELmType: elmTp,
-			Fields:  fields,
 		},
 		Strategy: tl.PrimaryStrategy(),
+		Fields:   fields,
 	}
 	// 类名 : 表名
 	cacheStructName[elmTp.String()] = tableName
@@ -185,4 +192,37 @@ func Register(tl external.Table) (err error) {
 	// 检查数据库表信息
 	CheckTable(tableName)
 	return
+}
+
+func index(field *external.Field, tags map[string]string, keyName string) {
+	// 空间索引
+	name, ok := tags[keyName]
+	if ok {
+		if name == "" {
+			// 默认为列名
+			name = field.Column
+		}
+
+		index := &external.Index{
+			Name:   name,
+			Column: field.Column,
+		}
+
+		switch keyName {
+		case external.KeyUnique:
+			index.Type = external.IndexUnique
+			break
+		case external.KeyFullText:
+			index.Type = external.IndexFullText
+			break
+		case external.KeySpatial:
+			index.Type = external.IndexSpatial
+			break
+		default:
+			index.Type = external.IndexNormal
+			break
+		}
+
+		field.Indexes = append(field.Indexes, index)
+	}
 }
