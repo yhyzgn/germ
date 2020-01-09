@@ -29,21 +29,21 @@ type Logger interface {
 	ErrorF(format string, args ...interface{})
 }
 
-type common struct {
+type logger struct {
 }
 
-func (common) Info(info interface{}) {
+func (logger) Info(info interface{}) {
 	log.Println(info)
 }
 
-func (common) InfoF(format string, args ...interface{}) {
+func (logger) InfoF(format string, args ...interface{}) {
 	log.Printf(format, args...)
 }
 
-func (common) Error(err interface{}) {
+func (logger) Error(err interface{}) {
 	log.Println(err)
 }
 
-func (common) ErrorF(format string, args ...interface{}) {
+func (logger) ErrorF(format string, args ...interface{}) {
 	log.Printf(format, args...)
 }

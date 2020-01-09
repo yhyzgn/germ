@@ -28,13 +28,13 @@ type Table interface {
 	PrimaryStrategy() primary.Strategy
 }
 
-type Common struct {
+type TableAdapter struct {
 }
 
-func (Common) TableName() string {
+func (TableAdapter) TableName() string {
 	return ""
 }
 
-func (Common) PrimaryStrategy() primary.Strategy {
+func (TableAdapter) PrimaryStrategy() primary.Strategy {
 	return nil
 }

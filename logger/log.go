@@ -35,7 +35,7 @@ var (
 func init() {
 	once.Do(func() {
 		if lgr == nil {
-			lgr = common{}
+			lgr = logger{}
 			showSQL = true
 		}
 	})

@@ -36,7 +36,7 @@ type Test struct {
 	Name       string    `germ:"column:name;default:null;comment:姓名"`
 	Age        int       `germ:"type:int;"`
 	CreateTime time.Time `germ:"column:create_time;notnull;"`
-	external.Common
+	external.TableAdapter
 }
 
 func (Test) TableName() string {
@@ -52,7 +52,7 @@ type User struct {
 	Name       string    `germ:"column:name;default:null"`
 	Age        int       `germ:"type:int;"`
 	CreateTime time.Time `germ:"column:create_time;notnull;"`
-	external.Common
+	external.TableAdapter
 }
 
 func (User) TableName() string {
